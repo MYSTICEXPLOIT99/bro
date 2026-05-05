@@ -208,6 +208,7 @@ if WindUI then
     Window = WindUI:CreateWindow({
         Title = "MYSTIC HUB  |  Block Spin 🔫| PAID 💸",
         Icon = "rbxassetid://76738700888155",
+        HideSearchBar = false,
         Author = "MYSTIC ",
         Folder = "BBBB HUB Now!!!",
         Size = UDim2.fromOffset(650, 400),
@@ -235,6 +236,8 @@ else
         end
     }
 end
+
+Window:Section({ Title ="MYSTIC HUB V.5.7.5" })
 
 ConfigManager = Window.ConfigManager
 myConfig = ConfigManager:CreateConfig("CathubConfig")
