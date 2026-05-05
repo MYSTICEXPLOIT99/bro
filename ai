@@ -2070,6 +2070,16 @@ local AntiRagdollToggle = Tab_Character:Toggle({Title = "Anti Ragdoll", Default 
 end})
 myConfig:Register("AntiRagdoll", AntiRagdollToggle)
 
+-- Invisible Mode (Desync) ย้ายมาที่ CHARACTER
+Tab_Character:Toggle({
+    Title = "Invisible Mode (Desync)",
+    Default = false,
+    Callback = function(state)
+        desyncEnabled = state
+        setDesync(state)
+    end
+})
+
 local HideNameToggle = Tab_Character:Toggle({Title = "Hide Name", Default = false, Callback = function(state)
     pcall(function()
         local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -2498,60 +2508,6 @@ Tab_buyer:Button({
 -- MISC TAB
 -- ============================================================
 local Tab_misc = Window:Tab({Title = "MISC:", Icon = "warehouse"})
-Tab_misc:Section({Title = "INVISIBLE (DESYNC)"})
-local InvisibleToggle = Tab_misc:Toggle({
-    Title = "Invisible Mode (Desync)",
-    Desc = "เปิดโหมดล่องหน",
-    Default = false,
-    Callback = function(state)
-        desyncEnabled = state
-        setDesync(state)
-    end
-})
-
-Tab_misc:Divider()
-Tab_misc:Toggle({
-    Title = "มองของบนพื้น",
-    Default = groundItemsESPEnabled,
-    Callback = function(state)
-        groundItemsESPEnabled = state
-        if not state then
-            for _, d in pairs(item_drawings) do
-                if d.circle then d.circle.Visible = false end
-                if d.innerCircle then d.innerCircle.Visible = false end
-                if d.name then d.name.Visible = false end
-                if d.amount then d.amount.Visible = false end
-                if d.highlight then d.highlight.Enabled = false end
-            end
-        end
-    end
-})
-
-Tab_misc:Button({Title = "Server Rejoin", Callback = function()
-    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
-end})
-
-local HttpService = game:GetService("HttpService")
-local TeleportService = game:GetService("TeleportService")
-Tab_misc:Button({
-    Title = "Server Hop",
-    Callback = function()
-        local PlaceId = 104715542330896
-        local success, servers = pcall(function()
-            return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Desc&limit=100"))
-        end)
-        if success and servers and servers.data then
-            local available = {}
-            for _, s in ipairs(servers.data) do
-                if s.playing < s.maxPlayers and s.id ~= game.JobId then table.insert(available, s) end
-            end
-            if #available > 0 then
-                table.sort(available, function(a,b) return a.playing > b.playing end)
-                TeleportService:TeleportToPlaceInstance(PlaceId, available[1].id, LocalPlayer)
-            end
-        end
-    end
-})
 
 Tab_misc:Divider()
 Tab_misc:Button({Title = "Claim All Quest", Callback = function()
@@ -2751,44 +2707,118 @@ if success and sellBtn then
     for _, v in pairs(sellBtn:GetDescendants()) do if v:IsA("NumberValue") then v.Value = 1 end end
 end
 
--- ==================== ANTI LOCK ใหม่ (ง่าย + ดี) ====================
+-- ==================== TAB SERVER ====================
+local Tab_server = Window:Tab({
+    Title = "SERVER",
+    Icon = "server"
+})
 
-getgenv().AntiLock = false
-local antiLockConn = nil
+Tab_server:Section({Title = "Server Tools"})
 
-local function StartAntiLock()
-    if antiLockConn then antiLockConn:Disconnect() end
-    
-    antiLockConn = RunService.Heartbeat:Connect(function()
-        if not getgenv().AntiLock then return end
-        local Root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if not Root then return end
+Tab_server:Button({
+    Title = "Rejoin Server",
+    Callback = function()
+        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+    end
+})
+
+Tab_server:Button({
+    Title = "Server Hop (เร็ว)",
+    Callback = function()
+        local PlaceId = game.PlaceId
+        local HttpService = game:GetService("HttpService")
+        local TeleportService = game:GetService("TeleportService")
         
-        local t = tick() * 3
-        local speed = 1300
+        local success, servers = pcall(function()
+            return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Desc&limit=100"))
+        end)
         
-        Root.Velocity = Vector3.new(
-            math.cos(t) * speed,
-            250,
-            math.sin(t) * speed
-        )
-    end)
-end
-
--- เพิ่มปุ่ม Anti Lock (แก้ไขรูปแบบให้ถูกต้อง)
-local visualSection = Tab_ESP:Section({Title = "Att:"})
-
-local AntiLockToggle = Tab_Character:Toggle({
-    Title = "Anti Lock (ใหม่)",
-    Default = false,
-    Callback = function(state)
-        getgenv().AntiLock = state
-        if state then
-            StartAntiLock()
-            WindUI:Notify({Title = "✅ Anti Lock เปิดแล้ว", Duration = 2})
+        if success and servers and servers.data then
+            local available = {}
+            for _, s in ipairs(servers.data) do
+                if s.playing < s.maxPlayers and s.id ~= game.JobId then
+                    table.insert(available, s)
+                end
+            end
+            if #available > 0 then
+                table.sort(available, function(a,b) return a.playing > b.playing end)
+                TeleportService:TeleportToPlaceInstance(PlaceId, available[1].id, LocalPlayer)
+            else
+                WindUI:Notify({Title = "❌ ไม่พบเซิร์ฟเวอร์ว่าง", Duration = 3})
+            end
         else
-            if antiLockConn then antiLockConn:Disconnect() end
-            WindUI:Notify({Title = "❌ Anti Lock ปิดแล้ว", Duration = 2})
+            WindUI:Notify({Title = "❌ ไม่สามารถหาเซิร์ฟเวอร์ได้", Duration = 3})
+        end
+    end
+})
+
+Tab_server:Button({
+    Title = "Copy Job ID",
+    Callback = function()
+        setclipboard(game.JobId)
+        WindUI:Notify({Title = "✅ Copy Job ID เรียบร้อย", Duration = 2})
+    end
+})
+
+Tab_server:Input({
+    Title = "Server Hop by Job ID",
+    Placeholder = "วาง Job ID ที่นี่",
+    Callback = function(text)
+        if text and text ~= "" then
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, text, LocalPlayer)
+        end
+    end
+})
+
+Tab_server:Section({Title = "Auto Server Hop"})
+
+local autoHopEnabled = false
+Tab_server:Toggle({
+    Title = "Auto Server Hop (เมื่อคนน้อย)",
+    Callback = function(state)
+        autoHopEnabled = state
+        if state then
+            WindUI:Notify({Title = "✅ Auto Server Hop เปิดแล้ว", Duration = 2})
+            task.spawn(function()
+                while autoHopEnabled do
+                    local players = #Players:GetPlayers()
+                    if players <= 8 then  -- เปลี่ยนตัวเลขได้
+                        WindUI:Notify({Title = "🔄 กำลัง Hop Server...", Duration = 2})
+                        -- เรียก Server Hop
+                        local PlaceId = game.PlaceId
+                        local HttpService = game:GetService("HttpService")
+                        local TeleportService = game:GetService("TeleportService")
+                        local success, servers = pcall(function()
+                            return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Desc&limit=100"))
+                        end)
+                        if success and servers and servers.data then
+                            for _, s in ipairs(servers.data) do
+                                if s.playing < s.maxPlayers and s.id ~= game.JobId then
+                                    TeleportService:TeleportToPlaceInstance(PlaceId, s.id, LocalPlayer)
+                                    return
+                                end
+                            end
+                        end
+                    end
+                    task.wait(15)
+                end
+            end)
+        else
+            WindUI:Notify({Title = "❌ Auto Server Hop ปิดแล้ว", Duration = 2})
+        end
+    end
+})
+
+Tab_ESP:Toggle({
+    Title = "ltiems",
+    Default = true,
+    Callback = function(state)
+        groundItemsESPEnabled = state
+        if not state then
+            for _, d in pairs(item_drawings) do
+                if d.name then d.name.Visible = false end
+                if d.highlight then d.highlight.Enabled = false end
+            end
         end
     end
 })
