@@ -1131,18 +1131,21 @@ function loadESP()
     end)
 end
 
--- ==================== FOV CIRCLE (PC + MOBILE เหมือนกัน) ====================
-if SilentFOVCircle then SilentFOVCircle:Destroy() end
+-- ==================== FOV CIRCLE (มือถือเหมือน PC) ====================
+if SilentFOVCircle then 
+    if typeof(SilentFOVCircle) == "Instance" then SilentFOVCircle:Destroy() end
+    SilentFOVCircle = nil 
+end
 
 if not isMobile then
-    -- PC ใช้ Drawing (เหมือนเดิม)
+    -- PC
     SilentFOVCircle = Drawing.new("Circle")
     SilentFOVCircle.Thickness = 2
     SilentFOVCircle.NumSides = 64
     SilentFOVCircle.Filled = false
-    SilentFOVCircle.Transparency = 0.7
+    SilentFOVCircle.Transparency = 0.65
 else
-    -- MOBILE ปรับให้สวยเหมือน PC
+    -- MOBILE (ปรับให้ขนาดใกล้เคียง PC)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "MobileFOV"
     ScreenGui.ResetOnSpawn = false
@@ -1150,7 +1153,6 @@ else
 
     SilentFOVCircle = Instance.new("Frame")
     SilentFOVCircle.Name = "FOVCircle"
-    SilentFOVCircle.Size = UDim2.fromOffset(240, 240)   -- ขนาดเริ่มต้น
     SilentFOVCircle.AnchorPoint = Vector2.new(0.5, 0.5)
     SilentFOVCircle.Position = UDim2.fromScale(0.5, 0.5)
     SilentFOVCircle.BackgroundTransparency = 1
@@ -1161,9 +1163,9 @@ else
     corner.Parent = SilentFOVCircle
 
     local stroke = Instance.new("UIStroke")
-    stroke.Thickness = 2.5
+    stroke.Thickness = 2.2
     stroke.Transparency = 0.6
-    stroke.Color = Color3.fromRGB(255, 50, 50)
+    stroke.Color = Color3.fromRGB(255, 60, 60)
     stroke.Parent = SilentFOVCircle
 end
 
