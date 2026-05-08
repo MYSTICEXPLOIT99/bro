@@ -1,4 +1,3 @@
-
 Players = game:GetService("Players")
 RunService = game:GetService("RunService")
 ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -27,33 +26,26 @@ droppedItems = workspace:WaitForChild("DroppedItems")
 Camera = Workspace.CurrentCamera
 Mouse = LocalPlayer:GetMouse()
 isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+
+-- ==================== แก้ไขการโหลด UI ====================
 WindUI = nil
+
+-- ลองโหลดหลายลิงก์ (Backup)
 pcall(function()
-    WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/ik/releases/latest/download/main.lua"))()
+    WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 end)
 
-Window = nil
-if WindUI then
-    Window = WindUI:CreateWindow({
-        Title = "MYSTIC HUB  |  Block Spin 🔫| PAID 💸",
-        Icon = "rbxassetid://76738700888155",
-        HideSearchBar = false,
-        Author = "MYSTIC ",
-        Folder = "BBBB HUB Now!!!",
-        Size = UDim2.fromOffset(650, 400),
-        Theme = "Dark",
-        Transparent = true,
-        Resizable = true,
-        KeyCode = Enum.KeyCode.G
-    })
-    Window:Tag({
-        Title = "v5.7.5",
-        Color = Color3.fromHex("#30ff6a"),
-        Radius = 12
-    })
-else
+if not WindUI then
+    pcall(function()
+        WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/main.lua"))()
+    end)
+end
+
+-- ถ้ายังโหลดไม่ได้ ให้ใช้ UI เปล่า
+if not WindUI then
+    warn("❌ ไม่สามารถโหลด WindUI ได้ ใช้ UI เปล่าแทน")
     Window = {
-        Tab = function(_)
+        Tab = function(_) 
             return {
                 Section = function() end,
                 Toggle = function() end,
@@ -64,6 +56,24 @@ else
             }
         end
     }
+else
+    Window = WindUI:CreateWindow({
+        Title = "MYSTIC HUB | Block Spin 🔫| PAID 💸",
+        Icon = "rbxassetid://76738700888155",
+        Author = "MYSTIC",
+        Folder = "MysticHub_Config",
+        Size = UDim2.fromOffset(650, 420),
+        Theme = "Dark",
+        Transparent = true,
+        Resizable = true,
+        KeyCode = Enum.KeyCode.G
+    })
+    
+    Window:Tag({
+        Title = "v5.7.5",
+        Color = Color3.fromHex("#30ff6a"),
+        Radius = 12
+    })
 end
 
 Window:Section({ Title ="MYSTIC HUB V.5.7.5" })
