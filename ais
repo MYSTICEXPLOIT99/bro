@@ -1339,80 +1339,57 @@ RunService.RenderStepped:Connect(function(deltaTime)
     end
 end)
 
--- hit jump
-local player = game.Players.LocalPlayer
+-- ==================== INFINITE JUMP สำหรับมือถือ ====================
 local jumpPowerEnabled = true
-local jumpConn_HJ = nil
+local jumpConnection = nil
 
-local function setupHighJump(char)
-    if not jumpPowerEnabled then return end
-    local humanoid = char:WaitForChild("Humanoid")
-    local hrp = char:WaitForChild("HumanoidRootPart")
+local function setupInfiniteJump()
+    if jumpConnection then jumpConnection:Disconnect() end
     
-    humanoid.UseJumpPower = true
-    humanoid.JumpPower = 60
-    
-    if jumpConn_HJ then
-        pcall(function() jumpConn_HJ:Disconnect() end)
-    end
-    
-    jumpConn_HJ = game:GetService("UserInputService").JumpRequest:Connect(function()
+    jumpConnection = UserInputService.JumpRequest:Connect(function()
         if not jumpPowerEnabled then return end
-        if hrp and hrp.Parent then
-            local look = hrp.CFrame.LookVector
-            hrp.Velocity = look * 80 + Vector3.new(0, 100, 0)
+        
+        local char = LocalPlayer.Character
+        if not char then return end
+        
+        local humanoid = char:FindFirstChild("Humanoid")
+        local root = char:FindFirstChild("HumanoidRootPart")
+        
+        if humanoid and root and humanoid.Health > 0 then
+            root.Velocity = Vector3.new(
+                root.Velocity.X,
+                95,           -- ความสูงกระโดด (ปรับได้)
+                root.Velocity.Z
+            )
         end
     end)
 end
 
-player.CharacterAdded:Connect(function(char)
-    wait(0.5)
-    if jumpPowerEnabled then
-        setupHighJump(char)
+-- Toggle Infinite Jump
+Tab_Character:Toggle({
+    Title = "Infinite Jump (มือถือ)",
+    Default = true,
+    Callback = function(state)
+        jumpPowerEnabled = state
+        if state then
+            setupInfiniteJump()
+            if WindUI then WindUI:Notify({Title = "✅ Infinite Jump เปิดแล้ว", Duration = 2}) end
+        else
+            if jumpConnection then jumpConnection:Disconnect() end
+            if WindUI then WindUI:Notify({Title = "❌ Infinite Jump ปิดแล้ว", Duration = 2}) end
+        end
     end
-end)
+})
 
-if player.Character then
-    setupHighJump(player.Character)
-end
+-- เริ่มใช้งานทันที
+setupInfiniteJump()
 
-LocalPlayer.CharacterAdded:Connect(function(char)
-    local hum = char:WaitForChild("Humanoid")
-    if flyJumpConnection then flyJumpConnection:Disconnect() end
-    flyJumpConnection = hum:GetPropertyChangedSignal("Jumping"):Connect(function()
-        if FlyEnabled and hum.Jumping then isFlyingUp = true else isFlyingUp = false end
-    end)
-end)
-
-LocalPlayer.CharacterAdded:Connect(setupCharacter)
-if LocalPlayer.Character then setupCharacter(LocalPlayer.Character) end
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.G and WindUI and Window then
-        if Window.Toggle then Window:Toggle() elseif Window.SetVisible then Window:SetVisible(not Window.Visible) end
-    end
-end)
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.Z and featureEnabled then toggleTeleport() end
-end)
-
-LocalPlayer.CharacterAdded:Connect(function(newChar)
-    Character = newChar
-    HumanoidRootPart = newChar:WaitForChild("HumanoidRootPart")
-    lockedY = nil
-    teleportActive = false
-    lockYPosition()
-end)
-
-lockYPosition()
+-- เมื่อตัวเกิดใหม่
 LocalPlayer.CharacterAdded:Connect(function()
     task.wait(1)
-    running = false
-    task.wait(0.1)
-    StartAutoAttack()
+    if jumpPowerEnabled then
+        setupInfiniteJump()
+    end
 end)
 
 -- ========== SKIP CRATE SYSTEM (ใหม่) ==========
