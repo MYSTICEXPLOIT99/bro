@@ -1,21 +1,58 @@
--- ==================== UI LOADER (แก้ไม่เห็น Tab) ====================
-WindUI = nil
+Players = game:GetService("Players")
+RunService = game:GetService("RunService")
+ReplicatedStorage = game:GetService("ReplicatedStorage")
+UserInputService = game:GetService("UserInputService")
+TweenService = game:GetService("TweenService")
+Debris = game:GetService("Debris")
+Workspace = game:GetService("Workspace")
+ContextActionService = game:GetService("ContextActionService")
+Remotes = ReplicatedStorage:WaitForChild("Remotes")
+Util = require(ReplicatedStorage.Modules.Core.Util)
+BuyPromptUI = require(ReplicatedStorage.Modules.Game.UI.BuyPromptUI)
+EmotesUI = require(ReplicatedStorage.Modules.Game.Emotes.EmotesUI)
+EmotesList = require(ReplicatedStorage.Modules.Game.Emotes.EmotesList)
+CoreUI = require(ReplicatedStorage.Modules.Core.UI)
+CharModule = require(ReplicatedStorage.Modules.Core.Char)
+ItemsFolder = ReplicatedStorage:WaitForChild("Items")
+MeleeFolder = ItemsFolder:WaitForChild("melee")
+LocalPlayer = Players.LocalPlayer
+Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+Humanoid = Character:WaitForChild("Humanoid")
+HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+Client = Players.LocalPlayer
+item_drawings = {}
+droppedItems = workspace:WaitForChild("DroppedItems")
 
--- โหลด WindUI แบบมี Backup
+Camera = Workspace.CurrentCamera
+Mouse = LocalPlayer:GetMouse()
+isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+WindUI = nil
 pcall(function()
-    WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua", true))()
+    WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 end)
 
-if not WindUI then
-    pcall(function()
-        WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/main.lua", true))()
-    end)
-end
+Window = nil
+if WindUI then
+    Window = WindUI:CreateWindow({
+        Title = "MYSTIC HUB  |  Block Spin 🔫| PAID 💸",
+        Icon = "list",
+        Author = "MYSTIC ",
+        Folder = "BBBB HUB Now!!!",
+        Size = UDim2.fromOffset(650, 400),
+        Theme = "Dark",
+        Transparent = true,
+        Resizable = true,
+        KeyCode = Enum.KeyCode.G
 
-if not WindUI then
-    warn("❌ โหลด WindUI ไม่สำเร็จ ใช้โหมดพื้นฐาน")
+    })
+    Window:Tag({
+        Title = "v5.7.5",
+        Color = Color3.fromHex("#30ff6a"),
+        Radius = 12
+    })
+else
     Window = {
-        Tab = function(_) 
+        Tab = function(_)
             return {
                 Section = function() end,
                 Toggle = function() end,
@@ -26,35 +63,6 @@ if not WindUI then
             }
         end
     }
-else
-    -- สร้าง Window แบบปลอดภัย
-    local success, WindowObj = pcall(function()
-        return WindUI:CreateWindow({
-            Title = "MYSTIC HUB | Block Spin 🔫| PAID 💸",
-            Icon = "rbxassetid://76738700888155",
-            HideSearchBar = false,
-            Author = "MYSTIC",
-            Folder = "MysticHub_Config",
-            Size = UDim2.fromOffset(680, 450),
-            Theme = "Dark",
-            Transparent = true,
-            Resizable = true,
-            KeyCode = Enum.KeyCode.G
-        })
-    end)
-
-    if success and WindowObj then
-        Window = WindowObj
-        Window:Tag({
-            Title = "v5.7.5",
-            Color = Color3.fromHex("#30ff6a"),
-            Radius = 12
-        })
-        print("✅ WindUI โหลดสำเร็จ")
-    else
-        warn("⚠️ WindUI โหลดสำเร็จแต่สร้าง Window ไม่ได้")
-        Window = { Tab = function() return {} end }
-    end
 end
 
 Window:Section({ Title ="MYSTIC HUB V.5.7.5" })
