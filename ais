@@ -61,6 +61,7 @@ else
         Title = "MYSTIC HUB | Block Spin 🔫| PAID 💸",
         Icon = "rbxassetid://76738700888155",
         Author = "MYSTIC",
+        HideSearchBar = false,
         Folder = "MysticHub_Config",
         Size = UDim2.fromOffset(650, 420),
         Theme = "Dark",
