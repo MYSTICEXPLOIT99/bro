@@ -11,7 +11,7 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 -- ─── Variables ─────────────────────────────────────────────────────────────────
-SilentAimEnabled = true -- บังคับเปิดระบบเริ่มต้น
+SilentAimEnabled = true
 FOVRadius = 120
 getgenv().RGB_Speed = 1.5
 CurrentTarget = nil
@@ -39,8 +39,6 @@ Tracer.Color = Color3.fromRGB(255, 50, 50)
 Tracer.Transparency = 1
 Tracer.Visible = false
 
-local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
-
 local walkSpeedEnabled = false
 local speedValue = 0.05
 local walkConn = nil
@@ -60,6 +58,29 @@ local COOLDOWN = 0
 local CHECK_DELAY = 0
 local lastUse = 0
 local healBusy = false
+
+-- ─── Universal GUI FOV System (8 Lines RGB) ────────────────────────────────────
+local FOVGui = Instance.new("ScreenGui")
+FOVGui.Name = "HYPER_FOV_Gui"
+FOVGui.ResetOnSpawn = false
+pcall(function() FOVGui.Parent = CoreGui end)
+if not FOVGui.Parent then FOVGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+
+local FOVFrame = Instance.new("Frame")
+FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+FOVFrame.Position = UDim2.fromScale(0.5, 0.5)
+FOVFrame.Size = UDim2.fromOffset(FOVRadius * 2, FOVRadius * 2)
+FOVFrame.BackgroundTransparency = 1
+FOVFrame.Parent = FOVGui
+
+local FOVLines = {}
+for i = 1, 8 do
+    local line = Instance.new("Frame")
+    line.AnchorPoint = Vector2.new(0.5, 0.5)
+    line.BorderSizePixel = 0
+    line.Parent = FOVFrame
+    FOVLines[i] = line
+end
 
 -- ─── Load WindUI ───────────────────────────────────────────────────────────────
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
@@ -94,7 +115,8 @@ Window:EditOpenButton({ Enabled = false })
 local ToggleGui = Instance.new("ScreenGui")
 ToggleGui.Name = "HYPER_Toggle"
 ToggleGui.ResetOnSpawn = false
-ToggleGui.Parent = CoreGui
+pcall(function() ToggleGui.Parent = CoreGui end)
+if not ToggleGui.Parent then ToggleGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local ToggleBtn = Instance.new("ImageButton")
 ToggleBtn.Size = UDim2.new(0, 79, 0, 79)
@@ -244,23 +266,6 @@ local function predictPosition(targetPart)
     local ping = getPing() or 0.1
     if ping < 0 then ping = 0.1 end
     return targetPart.Position + (velocity * ping * PREDICT_FACTOR)
-end
-
--- ─── FOV Objects (วงกลม + 8 เส้น RGB สำรอง) ────────────────────────────────────
-local MainFOVCircle = Drawing.new("Circle")
-MainFOVCircle.Thickness = 2
-MainFOVCircle.NumSides = 64
-MainFOVCircle.Filled = false
-MainFOVCircle.Transparency = 1
-MainFOVCircle.Visible = true
-
-local FOV_Lines = {}
-for i = 1, 8 do
-    local line = Drawing.new("Line")
-    line.Visible = true
-    line.Thickness = 2
-    line.Transparency = 1
-    FOV_Lines[i] = line
 end
 
 -- ─── Silent Aim Hook ───────────────────────────────────────────────────────────
@@ -803,36 +808,40 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ─── RenderStepped (บังคับให้ FOV ทำงานเสมอ) ─────────────────────────────────
+-- ─── RenderStepped Loop (FOV 8 เส้น RGB + Tracer) ──────────────────────────────
 RunService.RenderStepped:Connect(function()
     CurrentTarget = SilentAimEnabled and getClosestTarget() or nil
     local TracerTarget = getClosestTarget()
 
-    local Center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    local Time = tick() * (getgenv().RGB_Speed or 1.5)
+    -- อัปเดตขนาดและตำแหน่ง FOV
+    FOVGui.Enabled = SilentAimEnabled
+    if SilentAimEnabled then
+        FOVFrame.Size = UDim2.fromOffset(FOVRadius * 2, FOVRadius * 2)
+        local Center = Vector2.new(FOVRadius, FOVRadius)
+        local Time = tick() * (getgenv().RGB_Speed or 1.5)
 
-    -- วงกลมหลัก
-    if MainFOVCircle then
-        MainFOVCircle.Position = Center
-        MainFOVCircle.Radius = FOVRadius
-        MainFOVCircle.Color = Color3.fromHSV((Time) % 1, 1, 1)
-        MainFOVCircle.Visible = true
-    end
+        for i = 1, 8 do
+            local line = FOVLines[i]
+            if line then
+                local a1 = math.rad((i - 1) * 45)
+                local a2 = math.rad(i * 45)
 
-    -- 8 เส้นรอบวงกลม
-    for i = 1, 8 do
-        if FOV_Lines[i] then
-            local a1 = math.rad((i - 1) * 45)
-            local a2 = math.rad(i * 45)
+                local p1 = Center + Vector2.new(math.cos(a1) * FOVRadius, math.sin(a1) * FOVRadius)
+                local p2 = Center + Vector2.new(math.cos(a2) * FOVRadius, math.sin(a2) * FOVRadius)
 
-            FOV_Lines[i].From = Center + Vector2.new(math.cos(a1) * FOVRadius, math.sin(a1) * FOVRadius)
-            FOV_Lines[i].To   = Center + Vector2.new(math.cos(a2) * FOVRadius, math.sin(a2) * FOVRadius)
-            FOV_Lines[i].Color = Color3.fromHSV((Time + (i / 8)) % 1, 1, 1)
-            FOV_Lines[i].Visible = true
+                local mid = (p1 + p2) / 2
+                local length = (p1 - p2).Magnitude
+                local angle = math.deg(math.atan2(p2.Y - p1.Y, p2.X - p1.X))
+
+                line.Size = UDim2.new(0, length, 0, 2)
+                line.Position = UDim2.new(0, mid.X, 0, mid.Y)
+                line.Rotation = angle
+                line.BackgroundColor3 = Color3.fromHSV((Time + (i / 8)) % 1, 1, 1)
+            end
         end
     end
 
-    -- Tracer
+    -- อัปเดต Tracer
     if TracerTarget and TracerTarget.Character then
         local character = TracerTarget.Character
         local humanoid = character:FindFirstChild("Humanoid")
@@ -842,7 +851,7 @@ RunService.RenderStepped:Connect(function()
             local targetScreenPos, targetOnScreen = Camera:WorldToViewportPoint(TracerSmoothedPos)
             if targetOnScreen then
                 Tracer.Visible = true
-                Tracer.From = Center
+                Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
                 Tracer.To = Vector2.new(targetScreenPos.X, targetScreenPos.Y)
                 Tracer.Color = Color3.fromHSV((tick() * 0.3) % 1, 1, 1)
                 Tracer.Thickness = 1.3
