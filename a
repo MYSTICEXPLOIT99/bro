@@ -13,7 +13,7 @@ local Camera = workspace.CurrentCamera
 -- ─── Variables ─────────────────────────────────────────────────────────────────
 SilentAimEnabled = false
 FOVRadius = 120
-getgenv().RGB_Speed = 1.5 -- ความเร็วเปลี่ยนสีรุ้ง
+getgenv().RGB_Speed = 1.5
 CurrentTarget = nil
 SelectedAimPart = "Head"
 excludedPlayerNames = {}
@@ -246,13 +246,14 @@ local function predictPosition(targetPart)
     return targetPart.Position + (velocity * ping * PREDICT_FACTOR)
 end
 
--- ─── FOV 8-Lines RGB Circle ────────────────────────────────────────────────────
+-- ─── FOV 8-Lines RGB Circle Generator ─────────────────────────────────────────
 local FOV_Lines = {}
 for i = 1, 8 do
-    FOV_Lines[i] = Drawing.new("Line")
-    FOV_Lines[i].Visible = false
-    FOV_Lines[i].Thickness = 2
-    FOV_Lines[i].Transparency = 1
+    local line = Drawing.new("Line")
+    line.Visible = false
+    line.Thickness = 2
+    line.Transparency = 1
+    FOV_Lines[i] = line
 end
 
 -- ─── Silent Aim Hook ───────────────────────────────────────────────────────────
@@ -797,51 +798,56 @@ end)
 
 -- ─── RenderStepped (8-Lines FOV + Tracer) ─────────────────────────────────────
 RunService.RenderStepped:Connect(function()
-    pcall(function()
-        CurrentTarget = SilentAimEnabled and getClosestTarget() or nil
-        local TracerTarget = getClosestTarget()
+    -- 1. อัปเดตเป้าหมาย
+    CurrentTarget = SilentAimEnabled and getClosestTarget() or nil
+    local TracerTarget = getClosestTarget()
 
-        -- อัปเดต FOV Octagon 8 เส้น
-        if not SilentAimEnabled then
-            for i = 1, 8 do
-                FOV_Lines[i].Visible = false
-            end
-        else
-            local Center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-            local Time = tick() * (getgenv().RGB_Speed or 1.5)
+    -- 2. วาด FOV Octagon 8 เส้น
+    if not SilentAimEnabled then
+        for i = 1, 8 do
+            if FOV_Lines[i] then FOV_Lines[i].Visible = false end
+        end
+    else
+        local Center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        local Time = tick() * (getgenv().RGB_Speed or 1.5)
 
-            for i = 1, 8 do
-                local a1 = math.rad((i-1) * 45)
+        for i = 1, 8 do
+            if FOV_Lines[i] then
+                local a1 = math.rad((i - 1) * 45)
                 local a2 = math.rad(i * 45)
 
                 FOV_Lines[i].From = Center + Vector2.new(math.cos(a1) * FOVRadius, math.sin(a1) * FOVRadius)
                 FOV_Lines[i].To   = Center + Vector2.new(math.cos(a2) * FOVRadius, math.sin(a2) * FOVRadius)
-                FOV_Lines[i].Color = Color3.fromHSV((Time + (i/8)) % 1, 1, 1)
+                FOV_Lines[i].Color = Color3.fromHSV((Time + (i / 8)) % 1, 1, 1)
                 FOV_Lines[i].Visible = true
             end
         end
+    end
 
-        -- อัปเดต Tracer
-        if TracerTarget and TracerTarget.Character then
-            local character = TracerTarget.Character
-            local humanoid = character:FindFirstChild("Humanoid")
-            local targetPart = (SelectedAimPart == "HumanoidRootPart") and character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Head")
-            if humanoid and humanoid.Health > 0 and targetPart then
-                TracerSmoothedPos = TracerSmoothedPos:Lerp(targetPart.Position, SMOOTH_ALPHA)
-                local targetScreenPos, targetOnScreen = Camera:WorldToViewportPoint(TracerSmoothedPos)
-                if targetOnScreen then
-                    Tracer.Visible = true
-                    Tracer.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
-                    Tracer.To = Vector2.new(targetScreenPos.X, targetScreenPos.Y)
-                    Tracer.Color = Color3.fromHSV((tick()*0.3)%1, 1, 1)
-                    Tracer.Thickness = 1.3
-                else Tracer.Visible = false end
-            else Tracer.Visible = false end
-        else
-            Tracer.Visible = false
-            TracerSmoothedPos = Vector3.new()
+    -- 3. อัปเดต Tracer
+    if TracerTarget and TracerTarget.Character then
+        local character = TracerTarget.Character
+        local humanoid = character:FindFirstChild("Humanoid")
+        local targetPart = (SelectedAimPart == "HumanoidRootPart") and character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Head")
+        if humanoid and humanoid.Health > 0 and targetPart then
+            TracerSmoothedPos = TracerSmoothedPos:Lerp(targetPart.Position, SMOOTH_ALPHA)
+            local targetScreenPos, targetOnScreen = Camera:WorldToViewportPoint(TracerSmoothedPos)
+            if targetOnScreen then
+                Tracer.Visible = true
+                Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                Tracer.To = Vector2.new(targetScreenPos.X, targetScreenPos.Y)
+                Tracer.Color = Color3.fromHSV((tick() * 0.3) % 1, 1, 1)
+                Tracer.Thickness = 1.3
+            else 
+                Tracer.Visible = false 
+            end
+        else 
+            Tracer.Visible = false 
         end
-    end)
+    else
+        Tracer.Visible = false
+        TracerSmoothedPos = Vector3.new()
+    end
 end)
 
 -- ─── Tabs ──────────────────────────────────────────────────────────────────────
@@ -945,7 +951,10 @@ Tab:Section({Title = "Silent Aim:"})
 
 Tab:Toggle({
     Title = "Silent Aim", Default = false,
-    Callback = function(state) SilentAimEnabled = state; CurrentTarget = nil end
+    Callback = function(state) 
+        SilentAimEnabled = state 
+        CurrentTarget = nil 
+    end
 })
 
 Tab:Slider({
@@ -1016,7 +1025,7 @@ Tab_Visual:Toggle({
     Callback = function(state)
         FlyEnabled = state
         if not state then isFlyingUp = false end
-        if WindUI then WindUI:Notify({Title = state and "✅ Fly ON" or "❌ Fly OFF", Duration = 2}) end
+        if WindUI me then WindUI:Notify({Title = state and "✅ Fly ON" or "❌ Fly OFF", Duration = 2}) end
     end
 })
 
