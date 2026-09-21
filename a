@@ -23,56 +23,54 @@ local v=a.LocalPlayer
 local w={}
 local x=workspace:WaitForChild"DroppedItems"
 local y=g.CurrentCamera
+r:GetMouse()
 
 local enabled=false
 local ab=false
 local highlightEnabled=false
 local SelectedAimPart="Head"
+local updateHighlight
+local updateHighlights=function() end
 
 -- =============================================
--- LOAD MACLIB UI
+-- โหลด MacLib UI Library
 -- =============================================
-local MacLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/zxciaz/Universal-Script/main/maclib.lua"))()
-if not MacLib then
-	MacLib = loadstring(game:HttpGet("https://pastebin.com/raw/12345678"))() -- fallback
-end
+local MacLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/3345-c-a-t-s-u-s/-Response-Post-File/main/maclib.lua"))()
 
 local Window = MacLib:Window({
 	Title = "AUTO HUB",
 	Subtitle = "Block Spin 🔫 | MYSTIC HUB",
-	Size = UDim2.fromOffset(868, 650),
+	Size = UDim2.fromOffset(800, 550),
 	DragStyle = 1,
 	ShowUserInfo = true,
 	Keybind = Enum.KeyCode.G,
 	AcrylicBlur = true,
 })
 
-local TabGroup = Window:TabGroup()
+MacLib:SetFolder("CathubConfig")
 
-local TabCombat    = TabGroup:Tab({ Name = "COMBAT:ล็อค", Image = "rbxassetid://10734950309" })
-local TabWeapon    = TabGroup:Tab({ Name = "WEAPON:อาวุธ", Image = "rbxassetid://10734950309" })
-local TabESP       = TabGroup:Tab({ Name = "ESP:มอง", Image = "rbxassetid://10734950309" })
-local TabChar      = TabGroup:Tab({ Name = "CHARACTER:ผู้เล่น", Image = "rbxassetid://10734950309" })
-local TabPlayer    = TabGroup:Tab({ Name = "PLAYER:ผู้เล่น", Image = "rbxassetid://10734950309" })
-local TabBuy       = TabGroup:Tab({ Name = "BUY:ซื้อ", Image = "rbxassetid://10734950309" })
-local TabMisc      = TabGroup:Tab({ Name = "MISC:ตั้งค่า", Image = "rbxassetid://10734950309" })
+local TabGroup1 = Window:TabGroup()
 
-local SecCombatL   = TabCombat:Section({ Side = "Left" })
-local SecWeaponL   = TabWeapon:Section({ Side = "Left" })
-local SecESPL      = TabESP:Section({ Side = "Left" })
-local SecCharL     = TabChar:Section({ Side = "Left" })
-local SecPlayerL   = TabPlayer:Section({ Side = "Left" })
-local SecBuyL      = TabBuy:Section({ Side = "Left" })
-local SecMiscL     = TabMisc:Section({ Side = "Left" })
+-- สร้าง Tabs
+local tabCombat = TabGroup1:Tab({ Name = "COMBAT:ล็อค", Image = "rbxassetid://10734950309" })
+local tabWeapon = TabGroup1:Tab({ Name = "WEAPON:อาวุธ", Image = "rbxassetid://10734950309" })
+local tabESP    = TabGroup1:Tab({ Name = "ESP:มอง", Image = "rbxassetid://10734950309" })
+local tabChar   = TabGroup1:Tab({ Name = "CHARACTER:ผู้เล่น", Image = "rbxassetid://10734950309" })
+local tabPlayer = TabGroup1:Tab({ Name = "PLAYER:ผู้เล่น", Image = "rbxassetid://10734950309" })
+local tabBuy    = TabGroup1:Tab({ Name = "BUY:ซื้อ", Image = "rbxassetid://10734950309" })
+local tabMisc   = TabGroup1:Tab({ Name = "MISC:ตั้งค่า", Image = "rbxassetid://10734950309" })
 
--- Global Blur Toggle
-Window:GlobalSetting({
-	Name = "UI Blur",
-	Default = Window:GetAcrylicBlurState(),
-	Callback = function(bool)
-		Window:SetAcrylicBlurState(bool)
-	end,
-})
+-- สร้าง Sections
+local secCombat = tabCombat:Section({ Side = "Left" })
+local secWeaponMods = tabWeapon:Section({ Side = "Left" })
+local secWeaponCombat = tabWeapon:Section({ Side = "Right" })
+local secESP = tabESP:Section({ Side = "Left" })
+local secChar = tabChar:Section({ Side = "Left" })
+local secCharSnap = tabChar:Section({ Side = "Right" })
+local secPlayer = tabPlayer:Section({ Side = "Left" })
+local secBuy = tabBuy:Section({ Side = "Left" })
+local secMisc = tabMisc:Section({ Side = "Left" })
+local secConfig = tabMisc:Section({ Side = "Right" })
 
 local E
 pcall(function()
@@ -469,6 +467,10 @@ local function StartAutoAttack()
 	end)
 end
 
+local function createNeonEffectAtPosition(aF,aG)
+	if not s then return end
+end
+
 local function performTeleport()
 	if not u then return end
 	local aF=u.Position
@@ -481,6 +483,8 @@ local function performTeleport()
 	aH.PlayOnRemove=true
 	aH.Parent=u
 	aH:Destroy()
+	createNeonEffectAtPosition(aF,1.5)
+	createNeonEffectAtPosition(aG,2)
 end
 
 local function toggleTeleport()
@@ -1230,7 +1234,7 @@ c.ChildAdded:Connect(function(aN)
 	if aN.Name=="Remotes" then SetupAutoSkip() end
 end)
 
-local updateHighlight=function(a1)
+updateHighlight=function(a1)
 	if a1==game.Players.LocalPlayer then return end
 	if not a1.Character then return end
 	local a2=a1.Character:FindFirstChild"HumanoidRootPart"
@@ -1247,7 +1251,7 @@ local updateHighlight=function(a1)
 	end
 end
 
-local updateHighlights=function()
+updateHighlights=function()
 	for a1,a2 in pairs(aB) do
 		if a2 and a2.Parent then
 			a2.Adornee=a1.Character
@@ -1287,34 +1291,32 @@ end)
 loadESP()
 
 -- =============================================
--- MACLIB BINDINGS (INTERFACE UI)
+-- TAB: COMBAT:ล็อค
 -- =============================================
+secCombat:Header({ Name = "GUN:" })
 
--- TAB: COMBAT
-SecCombatL:Header({ Text = "GUN:" })
-
-SecCombatL:Toggle({
+secCombat:Toggle({
 	Name = "Silent Aim",
 	Default = false,
 	Callback = function(aO) F=aO; I=nil end
-})
+}, "SilentAim")
 
-SecCombatL:Toggle({
+secCombat:Toggle({
 	Name = "Red Line Lock",
 	Default = false,
 	Callback = function(aP) G=aP; I=nil end
-})
+}, "SilentAimAttach")
 
-SecCombatL:Slider({
+secCombat:Slider({
 	Name = "FOV",
+	Default = H,
 	Minimum = 20,
 	Maximum = 800,
-	Default = H,
 	Precision = 0,
 	Callback = function(aQ) H=tonumber(aQ) or 120 end
-})
+}, "FOVRadius")
 
-SecCombatL:Input({
+secCombat:Input({
 	Name = "Safe Friend",
 	Placeholder = "พิมพ์ชื่อคนที่ไม่ต้องการล็อค",
 	AcceptedCharacters = "All",
@@ -1328,10 +1330,12 @@ SecCombatL:Input({
 			end
 		end
 	end
-})
+}, "FriendsList")
 
--- TAB: WEAPON
-SecWeaponL:Header({ Text = "MODS:" })
+-- =============================================
+-- TAB: WEAPON:อาวุธ
+-- =============================================
+secWeaponMods:Header({ Name = "MODS:" })
 
 local aT_gunFolder=c:WaitForChild"Items":WaitForChild"gun"
 ai().FireRateValue=1000
@@ -1352,6 +1356,13 @@ local function forceSetAttribute(aU,aV,aW)
 	if aU and aU.SetAttribute then
 		pcall(function() aU:SetAttribute(aV,aW) end)
 	end
+end
+
+local function debugPrintAttributes(aU)
+	local aV=aU:GetAttributes()
+	local aW={}
+	for aX,aY in pairs(aV) do table.insert(aW,aX) end
+	table.sort(aW)
 end
 
 local function applyGodGun(aU)
@@ -1376,6 +1387,8 @@ local function applyGodGun(aU)
 			task.wait(0.1)
 		end
 	end)
+	task.wait(0.5)
+	debugPrintAttributes(aU)
 end
 
 b.Heartbeat:Connect(function()
@@ -1387,25 +1400,41 @@ b.Heartbeat:Connect(function()
 	end
 end)
 
-SecWeaponL:Slider({
-	Name = "Recoil",
+r.CharacterAdded:Connect(function(aU)
+	task.wait(1)
+	repeat
+		task.wait(0.1)
+		for aV,aW in ipairs(aU:GetChildren()) do
+			if aW:IsA"Tool" and isGunTool(aW) then task.spawn(applyGodGun,aW) end
+		end
+	until not ai().GunModsAutoApply
+end)
+
+r.Character.ChildAdded:Connect(function(aU)
+	if aU:IsA"Tool" and ai().GunModsAutoApply then
+		task.wait(0.2); applyGodGun(aU)
+	end
+end)
+
+secWeaponMods:Slider({
+	Name = "Recoil (ลดความดีดปืน)",
+	Default = 0,
 	Minimum = 0,
 	Maximum = 10,
-	Default = 0,
 	Precision = 1,
 	Callback = function(aU) ai().RecoilValue=aU end
 })
 
-SecWeaponL:Toggle({
-	Name = "Automatic",
+secWeaponMods:Toggle({
+	Name = "Automatic (ยิงรัว)",
 	Default = false,
 	Callback = function(aU)
 		ai().automatic=aU; ai().GunModsAutoApply=aU
-		if aU then Window:Notify({ Title = "Weapon", Description = "✅ Auto Modify Enabled" }) end
+		if aU then Window:Notify({ Title = "Auto Modify", Description = "เปิดโหมดอัตโนมัติแล้ว", Lifetime = 2 }) end
 	end
 })
 
-SecWeaponL:Header({ Text = "COMBAT" })
+secWeaponCombat:Header({ Name = "COMBAT" })
 
 local aU_meleeNames={}
 for aV,aW in ipairs(q:GetChildren()) do table.insert(aU_meleeNames,aW.Name) end
@@ -1449,24 +1478,27 @@ local function checkAndModifyFists()
 end
 
 b.Heartbeat:Connect(function() if ay then checkAndModifyFists() end end)
+r.CharacterAdded:Connect(function() task.wait(1); if ay then checkAndModifyFists() end end)
 
-SecWeaponL:Toggle({
-	Name = "Melee Aura",
+secWeaponCombat:Toggle({
+	Name = "Melee Aura (ระยะโจมตีประชิด)",
 	Default = false,
 	Callback = function(aV) ay=aV; checkAndModifyFists() end
-})
+}, "Fists Modifier")
 
-SecWeaponL:Toggle({
-	Name = "Auto Attack",
+secWeaponCombat:Toggle({
+	Name = "Auto Attack (ตีออโต้)",
 	Default = false,
 	Callback = function(aV) ab=aV end
-})
+}, "AutoAttack_Enabled")
 
--- TAB: ESP
-SecESPL:Header({ Text = "Visual:" })
+-- =============================================
+-- TAB: ESP:มอง
+-- =============================================
+secESP:Header({ Name = "Visual:" })
 
-SecESPL:Toggle({
-	Name = "Inventory Viewer",
+secESP:Toggle({
+	Name = "Inventory Viewer (มองของในกระเป๋า)",
 	Default = false,
 	Callback = function(aX)
 		aw=aX
@@ -1479,16 +1511,18 @@ SecESPL:Toggle({
 					if aZ~=r and aZ.Character then createBillboardForPlayer(aZ) end
 				end
 			end)
+			Window:Notify({ Title = "ESP Items", Description = "เปิดมองของในกระเป๋าแล้ว", Lifetime = 3 })
 		else
 			if ax then ax:Disconnect(); ax=nil end
 			for aY,aZ in pairs(av) do aZ:Destroy() end
 			av={}
+			Window:Notify({ Title = "ESP Items", Description = "ปิดมองของในกระเป๋าแล้ว", Lifetime = 3 })
 		end
 	end
-})
+}, "ItemsESP")
 
-SecESPL:Toggle({
-	Name = "Item ESP",
+secESP:Toggle({
+	Name = "Item (มองของตก)",
 	Default = true,
 	Callback = function(val)
 		itemESPEnabled=val
@@ -1501,43 +1535,62 @@ SecESPL:Toggle({
 				if by.highlight then by.highlight.Enabled=false end
 			end
 		end
+		Window:Notify({ Title = "Item ESP", Description = val and "เปิดการมองของตกแล้ว" or "ปิดการมองของตกแล้ว", Lifetime = 2 })
 	end
-})
+}, "ItemESP")
 
-SecESPL:Toggle({
-	Name = "ESP Box",
+secESP:Toggle({
+	Name = "ESP Box (กล่องรอบตัวผู้เล่น)",
 	Default = false,
-	Callback = function(val) espBoxEnabled=val end
-})
+	Callback = function(val)
+		espBoxEnabled=val
+		Window:Notify({ Title = "ESP Box", Description = val and "เปิดกล่องแล้ว" or "ปิดกล่องแล้ว", Lifetime = 2 })
+	end
+}, "ESPBox")
 
-SecESPL:Toggle({ Name = "Name", Default = false, Callback = function(aY) M=aY end })
-SecESPL:Toggle({ Name = "Health", Default = false, Callback = function(aZ) O=aZ end })
-SecESPL:Toggle({ Name = "Distance", Default = false, Callback = function(a_) N=a_ end })
+secESP:Toggle({ Name = "Name (มองชื่อ)", Default = false, Callback = function(aY) M=aY end }, "NameESP")
+secESP:Toggle({ Name = "Health (มองเลือด)", Default = false, Callback = function(aZ) O=aZ end }, "HealthESP")
+secESP:Toggle({ Name = "Distance (มองระยะ)", Default = false, Callback = function(a_) N=a_ end }, "DistanceESP")
 
-SecESPL:Toggle({
-	Name = "Highlight",
+secESP:Toggle({
+	Name = "Highlight (มองไฮไลท์)",
 	Default = false,
 	Callback = function(a0)
 		highlightEnabled=a0
 		for a1,a2 in pairs(game.Players:GetPlayers()) do updateHighlight(a2) end
 	end
-})
+}, "HighlightESP")
 
--- TAB: CHARACTER
-SecCharL:Header({ Text = "CHARACTER:" })
+game.Players.PlayerAdded:Connect(function(a1)
+	a1.CharacterAdded:Connect(function() task.wait(0.1); updateHighlight(a1) end)
+end)
+game.Players.PlayerRemoving:Connect(function(a1)
+	if aB[a1] then aB[a1]:Destroy(); aB[a1]=nil end
+end)
+for a1,a2 in pairs(game.Players:GetPlayers()) do
+	if a2~=game.Players.LocalPlayer then
+		a2.CharacterAdded:Connect(function() task.wait(0.1); updateHighlight(a2) end)
+		updateHighlight(a2)
+	end
+end
 
-SecCharL:Toggle({ Name = "Walk Speed", Default = false, Callback = function(a2) Q=a2 end })
+-- =============================================
+-- TAB: CHARACTER:ผู้เล่น
+-- =============================================
+secChar:Header({ Name = "CHARACTER:" })
 
-SecCharL:Slider({
-	Name = "Speed Multiplier",
+secChar:Toggle({ Name = "Walk Speed (เปิดความเร็วเดิน)", Default = false, Callback = function(a2) Q=a2 end }, "WalkSpeed")
+
+secChar:Slider({
+	Name = "Speed Multiplier (ปรับระดับความเร็ว)",
+	Default = 2,
 	Minimum = 1,
 	Maximum = 5,
-	Default = 2,
 	Precision = 1,
 	Callback = function(a3) R=a3*0.05 end
-})
+}, "SpeedMultiplier")
 
-SecCharL:Toggle({ Name = "Jump Power", Default = false, Callback = function(a4) S=a4 end })
+secChar:Toggle({ Name = "Jump Power (กระโดดไม่จำกัด)", Default = false, Callback = function(a4) S=a4 end }, "JumpPower")
 
 local a5_remote={}
 function a5_remote.send(...)
@@ -1548,8 +1601,8 @@ function a5_remote.send(...)
 	end
 end
 
-SecCharL:Toggle({
-	Name = "Infinite Stamina",
+secChar:Toggle({
+	Name = "Infinite Stamina (วิ่งไม่จำกัด)",
 	Default = false,
 	Callback = function(a6)
 		as=a6
@@ -1560,7 +1613,9 @@ SecCharL:Toggle({
 				local ba=getupvalue(a9,2).sprint_bar
 				if ba then
 					local bb=ba.update
-					ba.update=function(...) return bb(function() return 1 end) end
+					ba.update=function(...)
+						return bb(function() return 1 end)
+					end
 					ai().OriginalSprintUpdate=bb
 					ai().AutoSprintLoop=task.spawn(function()
 						while as do
@@ -1573,36 +1628,53 @@ SecCharL:Toggle({
 						end
 						pcall(function() a5_remote.send("set_sprinting_1",false) end)
 					end)
+					Window:Notify({ Title = "INF STAMINA", Description = "เปิดวิ่งไม่จำกัดแล้ว", Lifetime = 3 })
+				else
+					as=false
 				end
+			else
+				as=false
 			end
 		else
 			if ai().AutoSprintLoop then task.cancel(ai().AutoSprintLoop); ai().AutoSprintLoop=nil end
 			pcall(function() a5_remote.send("set_sprinting_1",false) end)
+			local a7,a8=pcall(function() return require(c.Modules.Game.Sprint) end)
+			if a7 and a8 then
+				local a9=a8.consume_stamina
+				local ba=getupvalue(a9,2).sprint_bar
+				if ba and ai().OriginalSprintUpdate then
+					ba.update=ai().OriginalSprintUpdate; ai().OriginalSprintUpdate=nil
+				end
+			end
+			Window:Notify({ Title = "Auto Sprint", Description = "ปิดวิ่งไม่จำกัดแล้ว", Lifetime = 3 })
 		end
 	end
-})
+}, "AutoSprint")
 
-SecCharL:Toggle({
-	Name = "Anti Lock",
+secChar:Toggle({
+	Name = "Anti Lock (กันล็อค)",
 	Default = false,
 	Callback = function(a7)
 		ai().Sky=a7
 		if a7 then ai().SkyAmount=1500 end
 	end
-})
+}, "AntiLock")
 
-SecCharL:Toggle({
-	Name = "Anti Kill",
+secChar:Toggle({
+	Name = "Anti Kill (กันซ้ำ)",
 	Default = false,
-	Callback = function(a8) enabled=a8 end
-})
+	Callback = function(a8)
+		enabled=a8
+		Window:Notify({ Title = "Anti Kill", Description = a8 and "เปิดระบบกันซ้ำแล้ว" or "ปิดระบบกันซ้ำแล้ว", Lifetime = 3 })
+	end
+}, "AntiKill")
 
-SecCharL:Header({ Text = "ATTRIBUTES:" })
+secChar:Header({ Name = "Att:" })
 
-SecCharL:Toggle({ Name = "Pickup items", Default = false, Callback = function(a9) ak=a9 end })
+secChar:Toggle({ Name = "Pickup items (ดูดของ)", Default = false, Callback = function(a9) ak=a9 end }, "PickupItems")
 
-SecCharL:Toggle({
-	Name = "Anti Ragdoll",
+secChar:Toggle({
+	Name = "Anti Ragdoll (กันล้ม)",
 	Default = false,
 	Callback = function(ba)
 		local bb=ba
@@ -1610,6 +1682,7 @@ SecCharL:Toggle({
 		pcall(function()
 			local bc=game:GetService"ReplicatedStorage"
 			local bd=game:GetService"Players"
+			local be=bd.LocalPlayer
 			local function findCounter()
 				for bf,bg in ipairs(getgc and getgc(true) or {}) do
 					if typeof(bg)=="table" and rawget(bg,"event") and rawget(bg,"func") then return bg end
@@ -1631,10 +1704,10 @@ SecCharL:Toggle({
 			end)
 		end)
 	end
-})
+}, "AntiRagdoll")
 
-SecCharL:Toggle({
-	Name = "Hide Name",
+secChar:Toggle({
+	Name = "Hide Name (ชื่อล่องหน)",
 	Default = false,
 	Callback = function(bb)
 		pcall(function()
@@ -1648,17 +1721,18 @@ SecCharL:Toggle({
 			end
 		end)
 	end
-})
+}, "HideName")
 
-SecCharL:Toggle({
-	Name = "Auto Respawn",
+secChar:Toggle({
+	Name = "Auto Respawn (เกิดอัตโนมัติ)",
 	Default = false,
 	Callback = function(bc)
 		local bd=bc
 		if not bd then return end
 		pcall(function()
 			local be=game:GetService"ReplicatedStorage"
-			local bg=game:GetService"Players".LocalPlayer
+			local bf=game:GetService"Players"
+			local bg=bf.LocalPlayer
 			local function findCounter()
 				for bh,bi in ipairs(getgc and getgc(true) or {}) do
 					if typeof(bi)=="table" and rawget(bi,"event") and rawget(bi,"func") then return bi end
@@ -1684,12 +1758,12 @@ SecCharL:Toggle({
 			end)
 		end)
 	end
-})
+}, "AutoRespawn")
 
-SecCharL:Header({ Text = "PC HOLD (Z)" })
+secCharSnap:Header({ Name = "PC HOLD (Z)" })
 
-SecCharL:Toggle({
-	Name = "Snap Under Map",
+secCharSnap:Toggle({
+	Name = "Snap Under Map (มุดดิน)",
 	Default = false,
 	Callback = function(bd)
 		W=bd
@@ -1702,13 +1776,13 @@ SecCharL:Toggle({
 			V=false; X=nil; Z=nil
 		end
 	end
-})
+}, "SnapUnderMap")
 
-SecCharL:Slider({
-	Name = "Snap Height",
+secCharSnap:Slider({
+	Name = "Snap (ระยะมุดดิน)",
+	Default = 10,
 	Minimum = 1,
 	Maximum = 50,
-	Default = 10,
 	Precision = 0,
 	Callback = function(be)
 		Y=be
@@ -1717,38 +1791,49 @@ SecCharL:Slider({
 			u.CFrame=CFrame.new(bf); X=bf.Y
 		end
 	end
-})
+}, "SnapHeight")
 
--- TAB: PLAYER
-SecPlayerL:Header({ Text = "PLAYER:" })
+-- =============================================
+-- TAB: PLAYER:ผู้เล่น
+-- =============================================
+secPlayer:Header({ Name = "PLAYER:" })
 
-SecPlayerL:Toggle({
-	Name = "Auto Finish",
+secPlayer:Toggle({
+	Name = "Auto Finnish (ซ้ำอัตโนมัติ)",
 	Default = false,
 	Callback = function(bi)
 		ad=bi
-		if bi then applyToAll() end
+		if bi then
+			applyToAll()
+			Window:Notify({ Title = "Auto Finish", Description = "เปิดซ้ำอัตโนมัติแล้ว", Lifetime = 3 })
+		else
+			Window:Notify({ Title = "Auto Finish", Description = "ปิดซ้ำอัตโนมัติแล้ว", Lifetime = 3 })
+		end
 	end
-})
+}, "AutoFinnish")
 
--- TAB: BUY
-SecBuyL:Header({ Text = "BUY:" })
+-- =============================================
+-- TAB: BUY:ซื้อ
+-- =============================================
+secBuy:Header({ Name = "BUY:" })
 
-SecBuyL:Toggle({
-	Name = "Skip Crate Spin",
+secBuy:Toggle({
+	Name = "Skip Crate Spin (ข้ามการหมุนกล่อง)",
 	Default = false,
 	Callback = function(bo)
 		aj=bo
 		if bo then TrySkipCrate() end
 	end
-})
+}, "SkipCrate")
 
--- TAB: MISC
-SecMiscL:Header({ Text = "SETTINGS:" })
+-- =============================================
+-- TAB: MISC:ตั้งค่า
+-- =============================================
+local bl_placeId=game.PlaceId
 
-SecMiscL:Input({
+secMisc:Input({
 	Name = "Server Hop by ID",
-	Placeholder = "id sever here!",
+	Placeholder = "ใส่ ID เซิร์ฟเวอร์ที่นี่!",
 	AcceptedCharacters = "All",
 	Callback = function(bm)
 		if not bm or bm=="" then return end
@@ -1756,20 +1841,22 @@ SecMiscL:Input({
 		for bo in string.gmatch(bm,"[%w%-]+") do table.insert(bn,bo) end
 		if #bn==0 then return end
 		for bo,bp in ipairs(bn) do
-			pcall(function() game:GetService"TeleportService":TeleportToPlaceInstance(game.PlaceId,bp,r) end)
+			print("กำลังวาร์ปไปเซิร์ฟ:",bp)
+			task.wait(0.5)
+			pcall(function() game:GetService"TeleportService":TeleportToPlaceInstance(bl_placeId,bp,r) end)
 		end
 	end
 })
 
-SecMiscL:Button({
-	Name = "Server Rejoin",
+secMisc:Button({
+	Name = "Server Rejoin (เข้าเซิร์ฟเดิม)",
 	Callback = function()
 		game:GetService"TeleportService":TeleportToPlaceInstance(game.PlaceId,game.JobId,game.Players.LocalPlayer)
 	end
 })
 
-SecMiscL:Button({
-	Name = "Server Hop",
+secMisc:Button({
+	Name = "Server Hop (ย้ายไปเซิร์ฟคนเยอะ)",
 	Callback = function()
 		local bn=104715542330896
 		local bo=game:GetService"HttpService"
@@ -1779,24 +1866,26 @@ SecMiscL:Button({
 				"https://games.roblox.com/v1/games/"..bn.."/servers/Public?sortOrder=Desc&limit=100"
 			))
 		end)
-		if not bq or not br or not br.data then return end
+		if not bq or not br or not br.data then warn"ไม่สามารถดึงข้อมูลเซิร์ฟเวอร์ได้"; return end
 		local bs={}
 		for bt,bu in ipairs(br.data) do
 			if bu.playing<bu.maxPlayers and bu.id~=game.JobId then table.insert(bs,bu) end
 		end
-		if #bs==0 then return end
+		if #bs==0 then warn"ไม่มีเซิร์ฟเวอร์ว่าง"; return end
 		table.sort(bs,function(bt,bu) return bt.playing>bu.playing end)
-		bp:TeleportToPlaceInstance(bn,bs[1].id,game.Players.LocalPlayer)
+		local bt=bs[1]
+		game.StarterGui:SetCore("SendNotification",{Title="Server Hop",Text="กำลังย้ายไปเซิร์ฟเวอร์คนเยอะ...",Duration=3})
+		bp:TeleportToPlaceInstance(bn,bt.id,game.Players.LocalPlayer)
 	end
 })
 
-SecMiscL:Divider()
+secMisc:Divider()
 
-SecMiscL:Button({
-	Name = "Claim All Quests",
+secMisc:Button({
+	Name = "Claim All Quest (รับภารกิจทั้งหมด)",
 	Callback = function()
 		task.spawn(function()
-			pcall(function()
+			local bn_ok,bo_err=pcall(function()
 				local bn2=game:GetService"Players"
 				local bo2=game:GetService"ReplicatedStorage"
 				local bp2=bn2.LocalPlayer
@@ -1804,6 +1893,7 @@ SecMiscL:Button({
 					for bq2,br2 in ipairs(getgc and getgc(true) or {}) do
 						if typeof(br2)=="table" and rawget(br2,"event") and rawget(br2,"func") then return br2 end
 					end
+					return nil
 				end
 				local bq2=findCounter()
 				if not bq2 then return end
@@ -1811,7 +1901,8 @@ SecMiscL:Button({
 				function br2.get(...)
 					local bs2={...}
 					bq2.func=(bq2.func or 0)+1
-					return bo2:WaitForChild"Remotes":WaitForChild"Get":InvokeServer(bq2.func,table.unpack(bs2))
+					local bt2=bo2:WaitForChild"Remotes":WaitForChild"Get"
+					return bt2:InvokeServer(bq2.func,table.unpack(bs2))
 				end
 				local bs2=bp2:WaitForChild"PlayerGui":WaitForChild"Quests":WaitForChild"QuestsHolder":WaitForChild"QuestsScrollingFrame"
 				for bt2,bu2 in ipairs(bs2:GetChildren()) do
@@ -1821,17 +1912,14 @@ SecMiscL:Button({
 					end
 				end
 			end)
+			if bn_ok then print"Claim All Quests Completed" else warn(bo_err) end
 		end)
 	end
 })
 
--- MacLib Settings Config
-MacLib:SetFolder("Maclib")
-TabMisc:InsertConfigSection("Left")
+-- แทรกระบบ Config ของ MacLib
+tabMisc:InsertConfigSection("Right")
 
--- =============================================
--- SYSTEM HOOKS & INIT
--- =============================================
 local bt_origTween=j.tween
 j.tween=function(bu,bv,bw)
 	if bu and bu:IsA"NumberValue" and bw and bw.Value~=nil then
@@ -1853,6 +1941,9 @@ if bu_ok and bv_btn then
 		if by:IsA"NumberValue" then by.Value=1 end
 	end
 end
+
+task.wait(2)
+print"Bypass"
 
 local function lockTool(bw)
 	if bw and bw:IsA"Tool" then
@@ -1878,6 +1969,9 @@ end
 
 init()
 r.CharacterAdded:Connect(function() task.wait(1); init() end)
+
+task.wait(1)
+print"Bypass hotbar inf"
 
 local function hookButton(bw)
 	if not bw then return end
@@ -1910,6 +2004,8 @@ end
 
 hookAllEmotes()
 r.CharacterAdded:Connect(function() task.wait(1); hookAllEmotes() end)
+
+task.wait(2)
 
 local bw_cam
 repeat task.wait() until workspace.CurrentCamera
@@ -2023,5 +2119,5 @@ a.PlayerRemoving:Connect(function(bx)
 	end
 end)
 
-TabCombat:Select()
+tabCombat:Select()
 MacLib:LoadAutoLoadConfig()
