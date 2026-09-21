@@ -39,6 +39,14 @@ Tracer.Color = Color3.fromRGB(255, 50, 50)
 Tracer.Transparency = 1
 Tracer.Visible = false
 
+-- ─── FOV Circle (Drawing วงกลมจริง RGB) ────────────────────────────────────────
+local SilentFOVCircle = Drawing.new("Circle")
+SilentFOVCircle.Thickness  = 2
+SilentFOVCircle.NumSides   = 64
+SilentFOVCircle.Filled     = false
+SilentFOVCircle.Transparency = 0.7
+SilentFOVCircle.Visible    = false
+
 local walkSpeedEnabled = false
 local speedValue = 0.05
 local walkConn = nil
@@ -58,29 +66,6 @@ local COOLDOWN = 0
 local CHECK_DELAY = 0
 local lastUse = 0
 local healBusy = false
-
--- ─── Universal GUI FOV System (8 Lines RGB) ────────────────────────────────────
-local FOVGui = Instance.new("ScreenGui")
-FOVGui.Name = "HYPER_FOV_Gui"
-FOVGui.ResetOnSpawn = false
-pcall(function() FOVGui.Parent = CoreGui end)
-if not FOVGui.Parent then FOVGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
-
-local FOVFrame = Instance.new("Frame")
-FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-FOVFrame.Position = UDim2.fromScale(0.5, 0.5)
-FOVFrame.Size = UDim2.fromOffset(FOVRadius * 2, FOVRadius * 2)
-FOVFrame.BackgroundTransparency = 1
-FOVFrame.Parent = FOVGui
-
-local FOVLines = {}
-for i = 1, 8 do
-    local line = Instance.new("Frame")
-    line.AnchorPoint = Vector2.new(0.5, 0.5)
-    line.BorderSizePixel = 0
-    line.Parent = FOVFrame
-    FOVLines[i] = line
-end
 
 -- ─── Load WindUI ───────────────────────────────────────────────────────────────
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
@@ -222,7 +207,7 @@ local function isShotgun()
     return false
 end
 
--- ─── Position History & Velocity ──────────────────────────────────────────────
+-- ─── Position History & Velocity ───────────────────────────────────────────────
 RunService.Heartbeat:Connect(function()
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
@@ -364,25 +349,19 @@ local function stopAnimations()
     if not hum then return end
     local animator = hum:FindFirstChildOfClass("Animator")
     if not animator then return end
-    for _, track in pairs(animator:GetPlayingAnimationTracks()) do
-        track:Stop(0)
-    end
+    for _, track in pairs(animator:GetPlayingAnimationTracks()) do track:Stop(0) end
 end
 
 local function getHealthTool()
     local bp = LocalPlayer:FindFirstChild("Backpack")
     if bp then
         for _, tool in pairs(bp:GetChildren()) do
-            if tool:IsA("Tool") and tool:GetAttribute("HealthRestoreAmount") then
-                return tool
-            end
+            if tool:IsA("Tool") and tool:GetAttribute("HealthRestoreAmount") then return tool end
         end
     end
     if LocalPlayer.Character then
         for _, tool in pairs(LocalPlayer.Character:GetChildren()) do
-            if tool:IsA("Tool") and tool:GetAttribute("HealthRestoreAmount") then
-                return tool
-            end
+            if tool:IsA("Tool") and tool:GetAttribute("HealthRestoreAmount") then return tool end
         end
     end
     return nil
@@ -391,8 +370,7 @@ end
 local function useHealthTool(tool)
     if healBusy then return end
     if tick() - lastUse < COOLDOWN then return end
-    healBusy = true
-    lastUse = tick()
+    healBusy = true; lastUse = tick()
     local char = LocalPlayer.Character
     if not char then healBusy = false; return end
     local oldTool = char:FindFirstChildOfClass("Tool")
@@ -401,9 +379,7 @@ local function useHealthTool(tool)
     tool:Activate()
     stopAnimations()
     task.wait(0.25)
-    if oldTool and oldTool.Parent == char then
-        oldTool.Parent = LocalPlayer.Backpack
-    end
+    if oldTool and oldTool.Parent == char then oldTool.Parent = LocalPlayer.Backpack end
     healBusy = false
 end
 
@@ -454,19 +430,15 @@ local function createESP(player)
         local hrp = player.Character:FindFirstChild("HumanoidRootPart")
         local humanoid = player.Character:FindFirstChild("Humanoid")
         if not hrp then for _, d in pairs(drawings) do d.Visible = false end; return end
-
         local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
         if not onScreen or screenPos.Z <= 0 then
             for _, d in pairs(drawings) do d.Visible = false end; return
         end
-
         local dist = 0
         if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
             dist = (hrp.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
         end
-
         local cx = screenPos.X
-
         if nameESPEnabled then
             local sz = math.clamp(42 - (42-14) * math.clamp(dist/50,0,1), 14, 42)
             nameText.Text = player.Name
@@ -474,32 +446,22 @@ local function createESP(player)
             nameText.Color = isPlayerExcluded(player.Name) and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,255,255)
             nameText.Position = Vector2.new(cx, screenPos.Y - 20)
             nameText.Visible = true
-        else
-            nameText.Visible = false
-        end
-
+        else nameText.Visible = false end
         if healthESPEnabled and humanoid then
             local perc = math.clamp(humanoid.Health / math.max(humanoid.MaxHealth, 1), 0, 1)
             local bw, bh = 70, 8
-            local bx = cx - bw/2
-            local by = screenPos.Y + 16
+            local bx = cx - bw/2; local by = screenPos.Y + 16
             healthBg.Position = Vector2.new(bx-1, by-1); healthBg.Size = Vector2.new(bw+2, bh+2); healthBg.Visible = true
             healthFg.Position = Vector2.new(bx, by); healthFg.Size = Vector2.new(bw * perc, bh)
             healthFg.Color = Color3.fromHSV(perc * 0.333, 1, 1); healthFg.Visible = true
             healthOutline.Position = Vector2.new(bx-1, by-1); healthOutline.Size = Vector2.new(bw+2, bh+2); healthOutline.Visible = true
-        else
-            healthBg.Visible = false; healthFg.Visible = false; healthOutline.Visible = false
-        end
-
+        else healthBg.Visible = false; healthFg.Visible = false; healthOutline.Visible = false end
         if distanceESPEnabled then
             distText.Text = string.format("%.0f m", dist)
             distText.Position = Vector2.new(cx, screenPos.Y + 28)
             distText.Visible = true
-        else
-            distText.Visible = false
-        end
+        else distText.Visible = false end
     end)
-
     espPlayers[player] = {conn = conn, drawings = drawings}
 end
 
@@ -549,7 +511,7 @@ local function createSkeleton(player)
                 local pos2, on2 = Camera:WorldToViewportPoint(part2.Position)
                 if on1 and on2 and pos1.Z > 0 and pos2.Z > 0 then
                     line.From = Vector2.new(pos1.X, pos1.Y)
-                    line.To = Vector2.new(pos2.X, pos2.Y)
+                    line.To   = Vector2.new(pos2.X, pos2.Y)
                     line.Visible = true
                 else line.Visible = false end
             else line.Visible = false end
@@ -585,13 +547,13 @@ local function createBoxESP(player)
         local isTarget = (CurrentTarget == player)
         box.Color = isTarget and Color3.fromRGB(255,50,50) or Color3.fromRGB(255,255,255)
         local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0,0.8,0))
-        local legPos = Camera:WorldToViewportPoint(root.Position - Vector3.new(0,3.2,0))
+        local legPos  = Camera:WorldToViewportPoint(root.Position - Vector3.new(0,3.2,0))
         if headPos.Z <= 0 or legPos.Z <= 0 then box.Visible = false; return end
         local height = math.abs(headPos.Y - legPos.Y) * 1.05
-        local width = height * 0.58
-        box.Size = Vector2.new(width, height)
+        local width  = height * 0.58
+        box.Size     = Vector2.new(width, height)
         box.Position = Vector2.new(headPos.X - width/2, headPos.Y - height * 0.05)
-        box.Visible = true
+        box.Visible  = true
     end)
     BoxDrawings[player] = {Box = box, Connection = conn}
 end
@@ -633,9 +595,9 @@ PlayerBillboards = {}
 inventoryESPEnabled = false
 
 RARITY_COLORS = {
-    ["Common"] = Color3.fromRGB(255,255,255), ["Uncommon"] = Color3.fromRGB(99,255,52),
-    ["Rare"] = Color3.fromRGB(51,170,255), ["Epic"] = Color3.fromRGB(237,44,255),
-    ["Legendary"] = Color3.fromRGB(255,150,0), ["Omega"] = Color3.fromRGB(255,20,51)
+    ["Common"]    = Color3.fromRGB(255,255,255), ["Uncommon"] = Color3.fromRGB(99,255,52),
+    ["Rare"]      = Color3.fromRGB(51,170,255),  ["Epic"]     = Color3.fromRGB(237,44,255),
+    ["Legendary"] = Color3.fromRGB(255,150,0),   ["Omega"]    = Color3.fromRGB(255,20,51)
 }
 
 local function registerItems(folder)
@@ -643,16 +605,21 @@ local function registerItems(folder)
         if tool:IsA("Tool") then
             local handle = tool:FindFirstChild("Handle")
             local displayName = tool:GetAttribute("DisplayName") or tool.Name
-            local itemId = tool:GetAttribute("ItemId") or tool:GetAttribute("Id") or tool.Name
-            local rarity = tool:GetAttribute("RarityName") or "Common"
+            local itemId  = tool:GetAttribute("ItemId") or tool:GetAttribute("Id") or tool.Name
+            local rarity  = tool:GetAttribute("RarityName") or "Common"
             local imageId = tool:GetAttribute("ImageId") or "rbxassetid://7072725737"
             local key
             if handle then
                 local mesh = handle:FindFirstChildOfClass("SpecialMesh")
-                if mesh and mesh.MeshId ~= "" then key = mesh.MeshId .. (mesh.TextureId or "") .. "_RARITY_" .. rarity
-                elseif handle:IsA("MeshPart") and handle.MeshId ~= "" then key = handle.MeshId .. (handle.TextureID or "") .. "_RARITY_" .. rarity end
+                if mesh and mesh.MeshId ~= "" then
+                    key = mesh.MeshId .. (mesh.TextureId or "") .. "_RARITY_" .. rarity
+                elseif handle:IsA("MeshPart") and handle.MeshId ~= "" then
+                    key = handle.MeshId .. (handle.TextureID or "") .. "_RARITY_" .. rarity
+                end
             end
-            if not key and itemId and itemId ~= "" and itemId ~= tool.Name then key = "ITEMID_" .. itemId .. "_RARITY_" .. rarity end
+            if not key and itemId and itemId ~= "" and itemId ~= tool.Name then
+                key = "ITEMID_" .. itemId .. "_RARITY_" .. rarity
+            end
             if not key then key = "NAME_" .. displayName .. "_" .. tool.Name .. "_RARITY_" .. rarity end
             WeaponRegistry[key] = {Name = displayName, Rarity = rarity, ImageId = imageId, ToolName = tool.Name}
         end
@@ -735,7 +702,7 @@ RunService.RenderStepped:Connect(function()
             local baseY = pos.Y + 23
             for i, info in ipairs(infos) do
                 local d = data.drawings[i]
-                d.Text = "[" .. info.Name .. "]"
+                d.Text  = "[" .. info.Name .. "]"
                 d.Color = RARITY_COLORS[info.Rarity] or Color3.new(1,1,1)
                 d.Position = Vector2.new(pos.X, baseY + (i-1)*13)
                 d.Visible = true
@@ -793,10 +760,14 @@ if LocalPlayer.Character then setupFlyJump(LocalPlayer.Character) end
 
 ContextActionService:BindAction("FlyUp", function(actionName, inputState, inputObject)
     if not FlyEnabled then return Enum.ContextActionResult.Pass end
-    local isSpace = inputObject.UserInputType == Enum.UserInputType.Keyboard and inputObject.KeyCode == Enum.KeyCode.Space
+    local isSpace = inputObject.UserInputType == Enum.UserInputType.Keyboard
+        and inputObject.KeyCode == Enum.KeyCode.Space
     if isSpace then
-        if inputState == Enum.UserInputState.Begin then isFlyingUp = true; return Enum.ContextActionResult.Sink
-        elseif inputState == Enum.UserInputState.End then isFlyingUp = false; return Enum.ContextActionResult.Sink end
+        if inputState == Enum.UserInputState.Begin then
+            isFlyingUp = true; return Enum.ContextActionResult.Sink
+        elseif inputState == Enum.UserInputState.End then
+            isFlyingUp = false; return Enum.ContextActionResult.Sink
+        end
     end
     return Enum.ContextActionResult.Pass
 end, false, Enum.KeyCode.Space)
@@ -808,57 +779,46 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ─── RenderStepped Loop (FOV 8 เส้น RGB + Tracer) ──────────────────────────────
+-- ─── RenderStepped Loop (FOV Circle RGB + Tracer) ──────────────────────────────
 RunService.RenderStepped:Connect(function()
     CurrentTarget = SilentAimEnabled and getClosestTarget() or nil
     local TracerTarget = getClosestTarget()
 
-    -- อัปเดตขนาดและตำแหน่ง FOV
-    FOVGui.Enabled = SilentAimEnabled
+    -- ── FOV Circle RGB ──
+    SilentFOVCircle.Visible = SilentAimEnabled
     if SilentAimEnabled then
-        FOVFrame.Size = UDim2.fromOffset(FOVRadius * 2, FOVRadius * 2)
-        local Center = Vector2.new(FOVRadius, FOVRadius)
-        local Time = tick() * (getgenv().RGB_Speed or 1.5)
-
-        for i = 1, 8 do
-            local line = FOVLines[i]
-            if line then
-                local a1 = math.rad((i - 1) * 45)
-                local a2 = math.rad(i * 45)
-
-                local p1 = Center + Vector2.new(math.cos(a1) * FOVRadius, math.sin(a1) * FOVRadius)
-                local p2 = Center + Vector2.new(math.cos(a2) * FOVRadius, math.sin(a2) * FOVRadius)
-
-                local mid = (p1 + p2) / 2
-                local length = (p1 - p2).Magnitude
-                local angle = math.deg(math.atan2(p2.Y - p1.Y, p2.X - p1.X))
-
-                line.Size = UDim2.new(0, length, 0, 2)
-                line.Position = UDim2.new(0, mid.X, 0, mid.Y)
-                line.Rotation = angle
-                line.BackgroundColor3 = Color3.fromHSV((Time + (i / 8)) % 1, 1, 1)
-            end
-        end
+        SilentFOVCircle.Position = Vector2.new(
+            Camera.ViewportSize.X / 2,
+            Camera.ViewportSize.Y / 2
+        )
+        SilentFOVCircle.Radius = FOVRadius
+        SilentFOVCircle.Color  = Color3.fromHSV(
+            (tick() * (getgenv().RGB_Speed or 1.5) * 0.1) % 1,
+            1, 1
+        )
     end
 
-    -- อัปเดต Tracer
+    -- ── Tracer RGB ──
     if TracerTarget and TracerTarget.Character then
-        local character = TracerTarget.Character
-        local humanoid = character:FindFirstChild("Humanoid")
-        local targetPart = (SelectedAimPart == "HumanoidRootPart") and character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Head")
+        local character  = TracerTarget.Character
+        local humanoid   = character:FindFirstChild("Humanoid")
+        local targetPart = (SelectedAimPart == "HumanoidRootPart")
+            and character:FindFirstChild("HumanoidRootPart")
+            or  character:FindFirstChild("Head")
         if humanoid and humanoid.Health > 0 and targetPart then
             TracerSmoothedPos = TracerSmoothedPos:Lerp(targetPart.Position, SMOOTH_ALPHA)
-            local targetScreenPos, targetOnScreen = Camera:WorldToViewportPoint(TracerSmoothedPos)
+            local targetScreenPos, targetOnScreen =
+                Camera:WorldToViewportPoint(TracerSmoothedPos)
             if targetOnScreen then
-                Tracer.Visible = true
-                Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-                Tracer.To = Vector2.new(targetScreenPos.X, targetScreenPos.Y)
-                Tracer.Color = Color3.fromHSV((tick() * 0.3) % 1, 1, 1)
+                Tracer.Visible   = true
+                Tracer.From      = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                Tracer.To        = Vector2.new(targetScreenPos.X, targetScreenPos.Y)
+                Tracer.Color     = Color3.fromHSV((tick() * 0.3) % 1, 1, 1)
                 Tracer.Thickness = 1.3
             else Tracer.Visible = false end
         else Tracer.Visible = false end
     else
-        Tracer.Visible = false
+        Tracer.Visible    = false
         TracerSmoothedPos = Vector3.new()
     end
 end)
@@ -886,9 +846,13 @@ end
 
 local function openCrateWithType(bulletType)
     local crateOptions = getCrateOptions()
-    if not crateOptions then if WindUI then WindUI:Notify({Title = "❌ ไม่พบ Ammo Crate", Duration = 2}) end; return end
+    if not crateOptions then
+        if WindUI then WindUI:Notify({Title = "❌ ไม่พบ Ammo Crate", Duration = 2}) end; return
+    end
     local targetItem = crateOptions:FindFirstChild(bulletType)
-    if not targetItem then if WindUI then WindUI:Notify({Title = "❌ ไม่มี " .. bulletType, Duration = 2}) end; return end
+    if not targetItem then
+        if WindUI then WindUI:Notify({Title = "❌ ไม่มี " .. bulletType, Duration = 2}) end; return
+    end
     local result = NetGet("open_crate", targetItem, "money")
     if WindUI then WindUI:Notify({Title = result and ("🔫 เปิด " .. bulletType .. " สำเร็จ") or "❌ เปิดไม่สำเร็จ", Duration = 2}) end
 end
@@ -936,7 +900,7 @@ end})
 
 Tab_general:Button({Title = "Boost FPS (ภาพกาก)", Callback = function()
     local Lighting = game:GetService("Lighting")
-    local Terrain = workspace:FindFirstChildOfClass("Terrain")
+    local Terrain  = workspace:FindFirstChildOfClass("Terrain")
     for _, v in ipairs(Lighting:GetChildren()) do
         if v:IsA("Sky") or v:IsA("Atmosphere") or v:IsA("BloomEffect") or
            v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("DepthOfFieldEffect") then
@@ -964,15 +928,21 @@ Tab:Section({Title = "Silent Aim:"})
 
 Tab:Toggle({
     Title = "Silent Aim", Default = true,
-    Callback = function(state) 
-        SilentAimEnabled = state 
-        CurrentTarget = nil 
+    Callback = function(state)
+        SilentAimEnabled = state
+        CurrentTarget    = nil
+        SilentFOVCircle.Visible = state
     end
 })
 
 Tab:Slider({
     Title = "FOV Radius", Value = {Min = 20, Max = 800, Default = 120},
     Callback = function(value) FOVRadius = tonumber(value) or 120 end
+})
+
+Tab:Slider({
+    Title = "RGB Speed", Value = {Min = 1, Max = 10, Default = 2},
+    Callback = function(v) getgenv().RGB_Speed = v * 0.5 end
 })
 
 Tab:Dropdown({
@@ -1003,8 +973,7 @@ Tab_ESP:Toggle({
     end
 })
 
-Tab_ESP:Toggle({Title = "Name ESP", Default = false, Callback = function(state) nameESPEnabled = state end})
-
+Tab_ESP:Toggle({Title = "Name ESP",   Default = false, Callback = function(state) nameESPEnabled     = state end})
 Tab_ESP:Toggle({
     Title = "Box ESP", Default = false,
     Callback = function(state)
@@ -1012,9 +981,8 @@ Tab_ESP:Toggle({
         if not state then for _, player in ipairs(Players:GetPlayers()) do removeBoxESP(player) end end
     end
 })
-
-Tab_ESP:Toggle({Title = "Health Bar", Default = false, Callback = function(state) healthESPEnabled = state end})
-Tab_ESP:Toggle({Title = "Distance", Default = false, Callback = function(state) distanceESPEnabled = state end})
+Tab_ESP:Toggle({Title = "Health Bar", Default = false, Callback = function(state) healthESPEnabled   = state end})
+Tab_ESP:Toggle({Title = "Distance",   Default = false, Callback = function(state) distanceESPEnabled = state end})
 Tab_ESP:Toggle({Title = "Skeleton ESP", Default = false, Callback = function(state) skeletonESPEnabled = state end})
 
 -- ─── Visual Tab ────────────────────────────────────────────────────────────────
@@ -1099,8 +1067,7 @@ Tab_Visual:Divider()
 Tab_Visual:Section({Title = "AUTO HEAL:"})
 
 Tab_Visual:Toggle({
-    Title = "Auto Use Health Item",
-    Desc = "ใช้ไอเทมฟื้น HP อัตโนมัติ",
+    Title = "Auto Use Health Item", Desc = "ใช้ไอเทมฟื้น HP อัตโนมัติ",
     Default = false,
     Callback = function(state)
         autoHealEnabled = state
@@ -1109,8 +1076,7 @@ Tab_Visual:Toggle({
 })
 
 Tab_Visual:Slider({
-    Title = "HP Threshold (%)",
-    Value = {Min = 10, Max = 99, Default = 95},
+    Title = "HP Threshold (%)", Value = {Min = 10, Max = 99, Default = 95},
     Callback = function(v) HEALTH_THRESHOLD = v end
 })
 
@@ -1119,11 +1085,11 @@ Tab_Visual:Section({Title = "PC HOLD (Z)"})
 
 local featureEnabled = false
 local teleportActive = false
-local lockedY = nil
-local maxHeight = 10
-local startY = nil
+local lockedY        = nil
+local maxHeight      = 10
+local startY         = nil
 local snapConnection = nil
-local clickCount = 0
+local clickCount     = 0
 local HumanoidRootPart = nil
 
 local function updateHRP()
@@ -1140,7 +1106,7 @@ if LocalPlayer.Character then updateHRP() end
 local function performTeleport()
     if not HumanoidRootPart then return end
     local currentPos = HumanoidRootPart.Position
-    local bottomPos = Vector3.new(currentPos.X, currentPos.Y - maxHeight, currentPos.Z)
+    local bottomPos  = Vector3.new(currentPos.X, currentPos.Y - maxHeight, currentPos.Z)
     HumanoidRootPart.CFrame = CFrame.new(bottomPos)
     lockedY = bottomPos.Y
 end
@@ -1226,7 +1192,7 @@ ServerTab:Button({
 ServerTab:Button({
     Title = "Hop Server (Low Player)", Icon = "shuffle",
     Callback = function()
-        local HttpService = game:GetService("HttpService")
+        local HttpService    = game:GetService("HttpService")
         local TeleportService = game:GetService("TeleportService")
         local servers = {}
         local ok, data = pcall(function()
