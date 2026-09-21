@@ -67,6 +67,26 @@ FOVStroke.Color = Color3.fromRGB(255, 0, 0)
 FOVStroke.Transparency = 0.3
 FOVStroke.Parent = FOVFrame
 
+-- เส้น Crosshair แนวนอน
+local CrossH = Instance.new("Frame")
+CrossH.Name = "CrossH"
+CrossH.AnchorPoint = Vector2.new(0.5, 0.5)
+CrossH.Position = UDim2.fromScale(0.5, 0.5)
+CrossH.Size = UDim2.new(0, 20, 0, 2)
+CrossH.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+CrossH.BorderSizePixel = 0
+CrossH.Parent = FOVFrame
+
+-- เส้น Crosshair แนวตั้ง
+local CrossV = Instance.new("Frame")
+CrossV.Name = "CrossV"
+CrossV.AnchorPoint = Vector2.new(0.5, 0.5)
+CrossV.Position = UDim2.fromScale(0.5, 0.5)
+CrossV.Size = UDim2.new(0, 2, 0, 20)
+CrossV.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+CrossV.BorderSizePixel = 0
+CrossV.Parent = FOVFrame
+
 FOVGui.Enabled = false
 
 local walkSpeedEnabled = false
@@ -806,15 +826,18 @@ RunService.RenderStepped:Connect(function()
     CurrentTarget = SilentAimEnabled and getClosestTarget() or nil
     local TracerTarget = getClosestTarget()
 
-    -- ── FOV Circle RGB (ScreenGui) ──
+    -- ── FOV Circle + Crosshair RGB (ScreenGui) ──
     FOVGui.Enabled = SilentAimEnabled
     if SilentAimEnabled then
         local diameter = FOVRadius * 2
         FOVFrame.Size = UDim2.fromOffset(diameter, diameter)
-        FOVStroke.Color = Color3.fromHSV(
+        local rgbColor = Color3.fromHSV(
             (tick() * (getgenv().RGB_Speed or 1.5) * 0.1) % 1,
             1, 1
         )
+        FOVStroke.Color = rgbColor
+        CrossH.BackgroundColor3 = rgbColor
+        CrossV.BackgroundColor3 = rgbColor
     end
 
     -- ── Tracer RGB ──
