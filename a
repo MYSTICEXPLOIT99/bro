@@ -39,13 +39,35 @@ Tracer.Color = Color3.fromRGB(255, 50, 50)
 Tracer.Transparency = 1
 Tracer.Visible = false
 
--- ─── FOV Circle (Drawing วงกลมจริง RGB) ────────────────────────────────────────
-local SilentFOVCircle = Drawing.new("Circle")
-SilentFOVCircle.Thickness  = 2
-SilentFOVCircle.NumSides   = 64
-SilentFOVCircle.Filled     = false
-SilentFOVCircle.Transparency = 0.7
-SilentFOVCircle.Visible    = false
+-- ─── FOV Circle (ScreenGui - ใช้ได้ทุก executor) ─────────────────────────────
+local FOVGui = Instance.new("ScreenGui")
+FOVGui.Name = "HYPERX_FOV"
+FOVGui.ResetOnSpawn = false
+FOVGui.IgnoreGuiInset = true
+pcall(function() FOVGui.Parent = game:GetService("CoreGui") end)
+if not FOVGui.Parent then
+    FOVGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
+
+local FOVFrame = Instance.new("Frame")
+FOVFrame.Name = "FOVCircle"
+FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+FOVFrame.Position = UDim2.fromScale(0.5, 0.5)
+FOVFrame.Size = UDim2.fromOffset(FOVRadius * 2, FOVRadius * 2)
+FOVFrame.BackgroundTransparency = 1
+FOVFrame.Parent = FOVGui
+
+local FOVCorner = Instance.new("UICorner")
+FOVCorner.CornerRadius = UDim.new(1, 0)
+FOVCorner.Parent = FOVFrame
+
+local FOVStroke = Instance.new("UIStroke")
+FOVStroke.Thickness = 2
+FOVStroke.Color = Color3.fromRGB(255, 0, 0)
+FOVStroke.Transparency = 0.3
+FOVStroke.Parent = FOVFrame
+
+FOVGui.Enabled = false
 
 local walkSpeedEnabled = false
 local speedValue = 0.05
@@ -784,15 +806,12 @@ RunService.RenderStepped:Connect(function()
     CurrentTarget = SilentAimEnabled and getClosestTarget() or nil
     local TracerTarget = getClosestTarget()
 
-    -- ── FOV Circle RGB ──
-    SilentFOVCircle.Visible = SilentAimEnabled
+    -- ── FOV Circle RGB (ScreenGui) ──
+    FOVGui.Enabled = SilentAimEnabled
     if SilentAimEnabled then
-        SilentFOVCircle.Position = Vector2.new(
-            Camera.ViewportSize.X / 2,
-            Camera.ViewportSize.Y / 2
-        )
-        SilentFOVCircle.Radius = FOVRadius
-        SilentFOVCircle.Color  = Color3.fromHSV(
+        local diameter = FOVRadius * 2
+        FOVFrame.Size = UDim2.fromOffset(diameter, diameter)
+        FOVStroke.Color = Color3.fromHSV(
             (tick() * (getgenv().RGB_Speed or 1.5) * 0.1) % 1,
             1, 1
         )
@@ -931,7 +950,7 @@ Tab:Toggle({
     Callback = function(state)
         SilentAimEnabled = state
         CurrentTarget    = nil
-        SilentFOVCircle.Visible = state
+        FOVGui.Enabled   = state
     end
 })
 
